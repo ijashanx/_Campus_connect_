@@ -1,0 +1,69 @@
+<%- include('../partials/header') %>
+
+    <div style="max-width: 1000px; margin: 4rem auto; padding: 0 1rem;">
+        <div style="border-bottom: 3px solid var(--primary); padding-bottom: 2rem; margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; text-transform: uppercase; margin: 0;">My Complaints</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Track and manage your submitted complaints and grievances.</p>
+            </div>
+            <% if (user && user.role !== 'admin') { %>
+            <a href="/complaints/new" class="btn btn-lg"
+                style="box-shadow: 4px 4px 0px #000; transform: translateY(-4px); border-radius: 0; border: 2px solid #000;">
+                <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Submit Complaint
+            </a>
+            <% } %>
+        </div>
+
+        <form method="GET" action="/complaints" style="background: var(--surface); border: 1px solid var(--border); padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2.5rem; border-radius: 4px;">
+            <!-- Left side: Title and Search -->
+            <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                <span style="font-weight: 800; font-size: 1.1rem; color: var(--primary); text-transform: uppercase; letter-spacing: -0.5px;">Filters</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; max-width: 300px;">
+                    <i class="fa-solid fa-search" style="color: var(--text-muted);"></i>
+                    <input type="text" name="keyword" placeholder="Search keyword..." value="<%= locals.filters && filters.keyword ? filters.keyword : '' %>" style="border: none; background: transparent; padding: 0.4rem; color: var(--text); outline: none; width: 100%; border-bottom: 1px solid var(--border);">
+                </div>
+            </div>
+            
+            <!-- Right side: Filters & Actions -->
+            <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                <!-- Status -->
+                <select name="status" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; cursor: pointer; outline: none; padding: 0.4rem 0;">
+                    <option value="" style="background: var(--surface);">All Statuses</option>
+                    <option value="Pending" <%= locals.filters && filters.status === 'Pending' ? 'selected' : '' %> style="background: var(--surface);">Pending</option>
+                    <option value="In Progress" <%= locals.filters && filters.status === 'In Progress' ? 'selected' : '' %> style="background: var(--surface);">In Progress</option>
+                    <option value="Resolved" <%= locals.filters && filters.status === 'Resolved' ? 'selected' : '' %> style="background: var(--surface);">Resolved</option>
+                    <option value="Rejected" <%= locals.filters && filters.status === 'Rejected' ? 'selected' : '' %> style="background: var(--surface);">Rejected</option>
+                </select>
+
+                <!-- Priority -->
+                <select name="priority" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; cursor: pointer; outline: none; padding: 0.4rem 0;">
+                    <option value="" style="background: var(--surface);">All Priorities</option>
+                    <option value="Low" <%= locals.filters && filters.priority === 'Low' ? 'selected' : '' %> style="background: var(--surface);">Low</option>
+                    <option value="Medium" <%= locals.filters && filters.priority === 'Medium' ? 'selected' : '' %> style="background: var(--surface);">Medium</option>
+                    <option value="High" <%= locals.filters && filters.priority === 'High' ? 'selected' : '' %> style="background: var(--surface);">High</option>
+                </select>
+
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="submit" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Filter</button>
+                    <a href="/complaints" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.9rem; text-decoration: none;">Clear</a>
+                </div>
+            </div>
+        </form>
+
+        <% if (complaints.length===0) { %>
+            <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+                <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"><i
+                        class="fa-solid fa-check-circle"></i></div>
+                <h3>No Complaints Found</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">You haven't submitted any complaints yet.
+                </p>
+                <% if (user && user.role !== 'admin') { %>
+                <a href="/complaints/new" class="btn">Submit Your First Complaint</a>
+                <% } %>
+            </div>
+            <% } else { %>
+                <%- include('../partials/_complaintGrid', { complaints, savedComplaintIds: locals.savedComplaintIds || [] }) %>
+            <% } %>
+    </div>
+
+    <%- include('../partials/footer') %>
