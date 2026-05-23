@@ -1,0 +1,283 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/_adminSidebar', { activeMenu: 'notes' }) %>
+
+    <div class="admin-content" style="max-width: 1100px;">
+        <div style="border-bottom: 2px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 2rem;">
+            <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin: 0;">Study Notes & Departments</h1>
+            <p style="color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">Moderate uploaded study notes and manage academic departments.</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap;">
+            <button onclick="switchTab('notes-tab')" id="btn-notes-tab" class="tab-btn active-tab" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text); cursor: pointer; border-radius: 4px; font-size: 1rem;">
+                <i class="fa-solid fa-book"></i> Moderate Notes
+            </button>
+            <button onclick="switchTab('depts-tab')" id="btn-depts-tab" class="tab-btn" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 4px; font-size: 1rem;">
+                <i class="fa-solid fa-graduation-cap"></i> Manage Departments
+            </button>
+            <button onclick="switchTab('subjects-tab')" id="btn-subjects-tab" class="tab-btn" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 4px; font-size: 1rem;">
+                <i class="fa-solid fa-book-open"></i> Manage Subjects
+            </button>
+        </div>
+
+        <!-- Tab 1: Notes Moderation -->
+        <div id="notes-tab" class="tab-content">
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <!-- Filter Sidebar -->
+                <div style="flex: 1; min-width: 250px; max-width: 300px;">
+                    <div class="glass-card" style="position: sticky; top: 20px;">
+                        <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;">Filters</h3>
+                        <form id="filter-form" action="/admin/notes" method="GET">
+                            <div style="margin-bottom: 1.2rem;">
+                                <label style="display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">Search</label>
+                                <input type="text" name="keyword" placeholder="Title, subject, desc..." style="width: 100%; padding: 0.5rem; font-size: 0.9rem;" value="<%= typeof filters !== 'undefined' && filters.keyword ? filters.keyword : '' %>">
+                            </div>
+
+                            <div style="margin-bottom: 1.2rem;">
+                                <label style="display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">Sort By</label>
+                                <select name="sort" style="width: 100%; padding: 0.5rem; font-size: 0.9rem;">
+                                    <option value="newest" <%= typeof filters !== 'undefined' && filters.sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+                                    <option value="downloads" <%= typeof filters !== 'undefined' && filters.sort === 'downloads' ? 'selected' : '' %>>Most Downloaded</option>
+                                    <option value="alphabetical" <%= typeof filters !== 'undefined' && filters.sort === 'alphabetical' ? 'selected' : '' %>>Alphabetical (A-Z)</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Results Area -->
+                <div style="flex: 3; min-width: 60%;">
+                    <div id="results-container" style="transition: opacity 0.2s;">
+                        <%- include('../partials/_noteGrid', { notes, isAdmin: true }) %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Department Management -->
+        <div id="depts-tab" class="tab-content" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+                <!-- Add Department Form -->
+                <div class="glass-card" style="padding: 1.5rem; border: 2px solid var(--primary);">
+                    <h3 style="margin-bottom: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;"><i class="fa-solid fa-plus-circle"></i> Add Department</h3>
+                    <form action="/admin/departments" method="POST">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem;">Department Name</label>
+                            <input type="text" name="name" required style="width: 100%; padding: 0.5rem;" placeholder="E.g., BE CSE, BCA, MBA">
+                        </div>
+                        <div style="margin-bottom: 1.2rem;">
+                            <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem;">Course Duration (Years)</label>
+                            <select name="years" required style="width: 100%; padding: 0.5rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                                <option value="1">1 Year</option>
+                                <option value="2">2 Years</option>
+                                <option value="3" selected>3 Years</option>
+                                <option value="4">4 Years</option>
+                                <option value="5">5 Years</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%; font-weight: bold;">Create Department</button>
+                    </form>
+                </div>
+
+                <!-- Existing Departments List -->
+                <div class="glass-card" style="padding: 1.5rem; border: 2px solid var(--primary);">
+                    <h3 style="margin-bottom: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;"><i class="fa-solid fa-list"></i> Academic Departments</h3>
+                    
+                    <% if (departments.length === 0) { %>
+                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No departments configured yet.</p>
+                    <% } else { %>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border);">
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">ID</th>
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Name</th>
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Duration</th>
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase; text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% departments.forEach(dept => { %>
+                                        <tr style="border-bottom: 1px solid var(--border);">
+                                            <td style="padding: 0.8rem; font-family: monospace; color: var(--text-muted);">#<%= dept.id %></td>
+                                            <td style="padding: 0.8rem; font-weight: bold;"><%= dept.name %></td>
+                                            <td style="padding: 0.8rem;"><%= dept.years %> Years</td>
+                                            <td style="padding: 0.8rem; text-align: right;">
+                                                <form action="/admin/departments/<%= dept.id %>/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Deleting this department will orphan its notes. Are you sure you want to delete this department?');">
+                                                    <button type="submit" class="btn" style="background: #ef4444; color: white; padding: 0.3rem 0.6rem; font-size: 0.8rem; border: none; cursor: pointer;">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Subject Management -->
+        <div id="subjects-tab" class="tab-content" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+                <!-- Add Subject Form -->
+                <div class="glass-card" style="padding: 1.5rem; border: 2px solid var(--primary);">
+                    <h3 style="margin-bottom: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;"><i class="fa-solid fa-plus-circle"></i> Add Subject</h3>
+                    <form action="/admin/subjects" method="POST">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem;">Subject Name</label>
+                            <input type="text" name="name" required style="width: 100%; padding: 0.5rem;" placeholder="E.g., Operating Systems, Data Structures">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem;">Department</label>
+                            <select name="department_id" id="subject_dept_id" required style="width: 100%; padding: 0.5rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                                <option value="">-- Select Department --</option>
+                                <% departments.forEach(dept => { %>
+                                    <option value="<%= dept.id %>" data-years="<%= dept.years %>"><%= dept.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1.2rem;">
+                            <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem;">Semester</label>
+                            <select name="semester" id="subject_semester" required disabled style="width: 100%; padding: 0.5rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                                <option value="">-- Select Semester --</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%; font-weight: bold;">Create Subject</button>
+                    </form>
+                </div>
+
+                <!-- Existing Subjects List -->
+                <div class="glass-card" style="padding: 1.5rem; border: 2px solid var(--primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <h3 style="margin: 0;"><i class="fa-solid fa-list"></i> Subjects List</h3>
+                        <!-- Filter dropdown -->
+                        <select id="filter_subjects_dept" style="padding: 0.3rem 0.5rem; font-size: 0.85rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                            <option value="all">All Departments</option>
+                            <% departments.forEach(dept => { %>
+                                <option value="<%= dept.id %>"><%= dept.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    
+                    <% const subjectsList = locals.subjects || []; %>
+                    <% if (subjectsList.length === 0) { %>
+                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No subjects created yet.</p>
+                    <% } else { %>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left;" id="subjects-table">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border);">
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Dept</th>
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Sem</th>
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Subject Name</th>
+                                        <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase; text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% subjectsList.forEach(subject => { %>
+                                        <tr style="border-bottom: 1px solid var(--border);" class="subject-row" data-dept-id="<%= subject.department_id %>">
+                                            <td style="padding: 0.8rem; font-weight: bold;"><%= subject.department_name %></td>
+                                            <td style="padding: 0.8rem;">Semester <%= subject.semester %></td>
+                                            <td style="padding: 0.8rem; font-family: monospace; color: var(--text);"><%= subject.name %></td>
+                                            <td style="padding: 0.8rem; text-align: right;">
+                                                <form action="/admin/subjects/<%= subject.id %>/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this subject?');">
+                                                    <button type="submit" class="btn" style="background: #ef4444; color: white; padding: 0.3rem 0.6rem; font-size: 0.8rem; border: none; cursor: pointer;">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/filter.js"></script>
+<script>
+    function switchTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        // Show current tab content
+        document.getElementById(tabId).style.display = 'block';
+
+        // Update tab buttons style
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active-tab');
+            btn.style.color = 'var(--text-muted)';
+        });
+        
+        const activeBtn = document.getElementById('btn-' + tabId);
+        activeBtn.classList.add('active-tab');
+        activeBtn.style.color = 'var(--text)';
+        
+        // Update URL hash to preserve tab on reload/redirect
+        window.location.hash = tabId;
+    }
+
+    // Dynamic Semesters for Add Subject Form
+    const subjectDeptSelect = document.getElementById('subject_dept_id');
+    const subjectSemSelect = document.getElementById('subject_semester');
+
+    if (subjectDeptSelect) {
+        subjectDeptSelect.addEventListener('change', () => {
+            const selectedOpt = subjectDeptSelect.options[subjectDeptSelect.selectedIndex];
+            if (!selectedOpt || !selectedOpt.value) {
+                subjectSemSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+                subjectSemSelect.disabled = true;
+                return;
+            }
+            const years = parseInt(selectedOpt.getAttribute('data-years'), 10) || 3;
+            subjectSemSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+            for (let s = 1; s <= (years * 2); s++) {
+                subjectSemSelect.innerHTML += `<option value="${s}">Semester ${s}</option>`;
+            }
+            subjectSemSelect.disabled = false;
+        });
+    }
+
+    // Filter Subjects List by Department
+    const filterSubjectsDept = document.getElementById('filter_subjects_dept');
+    if (filterSubjectsDept) {
+        filterSubjectsDept.addEventListener('change', () => {
+            const deptId = filterSubjectsDept.value;
+            const rows = document.querySelectorAll('.subject-row');
+            rows.forEach(row => {
+                if (deptId === 'all' || row.getAttribute('data-dept-id') === deptId) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // Handle initial hash check on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash;
+        if (hash === '#depts-tab') {
+            switchTab('depts-tab');
+        } else if (hash === '#subjects-tab') {
+            switchTab('subjects-tab');
+        } else {
+            switchTab('notes-tab');
+        }
+    });
+</script>
+
+<style>
+    .active-tab {
+        border-bottom: 3px solid var(--primary) !important;
+        background: rgba(var(--primary-rgb), 0.05) !important;
+    }
+    .tab-btn:hover {
+        color: var(--primary) !important;
+    }
+</style>
+<%- include('../partials/footer') %>

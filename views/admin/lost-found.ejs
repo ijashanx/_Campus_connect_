@@ -1,0 +1,44 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/_adminSidebar', { activeMenu: 'lost-found' }) %>
+
+    <div class="admin-content">
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 2rem;">Lost & Found Management</h1>
+        
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <!-- Filter Sidebar -->
+            <div style="flex: 1; min-width: 250px; max-width: 300px;">
+                <div class="glass-card" style="position: sticky; top: 20px;">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;">Filters</h3>
+                    <form id="filter-form" action="/admin/lost-found" method="GET">
+                        <div style="margin-bottom: 1.2rem;">
+                            <label style="display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">Search</label>
+                            <input type="text" name="keyword" placeholder="Title, location, description..." style="width: 100%; padding: 0.5rem; font-size: 0.9rem;" value="<%= typeof filters !== 'undefined' && filters.keyword ? filters.keyword : '' %>">
+                        </div>
+
+                        <div style="margin-bottom: 1.2rem;">
+                            <label style="display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">Status</label>
+                            <select name="status" style="width: 100%; padding: 0.5rem; font-size: 0.9rem;">
+                                <option value="">All Statuses</option>
+                                <option value="Open" <%= typeof filters !== 'undefined' && filters.status === 'Open' ? 'selected' : '' %>>Open</option>
+                                <option value="Claimed" <%= typeof filters !== 'undefined' && filters.status === 'Claimed' ? 'selected' : '' %>>Claimed</option>
+                                <option value="Resolved" <%= typeof filters !== 'undefined' && filters.status === 'Resolved' ? 'selected' : '' %>>Resolved</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Area -->
+            <div style="flex: 3; min-width: 60%;">
+                <div id="results-container" style="transition: opacity 0.2s;">
+                    <%- include('../partials/_lostFoundGrid', { items, isAdmin: true }) %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/filter.js"></script>
+<%- include('../partials/footer') %>

@@ -1,0 +1,135 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/_adminSidebar', { activeMenu: 'complaints' }) %>
+
+    <div class="admin-content">
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 2rem;">Complaint Management</h1>
+        <div class="feature-grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+            <div class="glass-card" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">
+                    <%= stats.total %>
+                </div>
+                <p style="color: var(--text-muted);">Total Complaints</p>
+            </div>
+            <div class="glass-card" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #ca8a04;">
+                    <%= stats.pending %>
+                </div>
+                <p style="color: var(--text-muted);">Pending</p>
+            </div>
+            <div class="glass-card" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #2563eb;">
+                    <%= stats.inProgress %>
+                </div>
+                <p style="color: var(--text-muted);">In Progress</p>
+            </div>
+            <div class="glass-card" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #16a34a;">
+                    <%= stats.resolved %>
+                </div>
+                <p style="color: var(--text-muted);">Resolved</p>
+            </div>
+        </div>
+
+        <% if (complaints.length===0) { %>
+            <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+                <h3>No Complaints Found</h3>
+            </div>
+            <% } else { %>
+                <div class="glass-card" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <th style="padding: 1rem;">ID</th>
+                                <th style="padding: 1rem;">User</th>
+                                <th style="padding: 1rem;">Title & Details</th>
+                                <th style="padding: 1rem;">Status</th>
+                                <th style="padding: 1rem;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% complaints.forEach(complaint=> { %>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 1rem; color: var(--text-muted);">#<%= complaint.id %>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <div><strong>
+                                                <%= complaint.full_name || complaint.username %>
+                                            </strong></div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">@<%=
+                                                complaint.username %>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <div style="font-weight: 600;">
+                                            <%= complaint.title %>
+                                        </div>
+                                        <div
+                                            style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                            <%= complaint.category %> | <span style="font-weight: 600;">Priority: <%=
+                                                        complaint.priority %></span> | <%= complaint.location %>
+                                        </div>
+                                        <details
+                                            style="font-size: 0.85rem; color: var(--text); background: var(--bg-hover); padding: 0.5rem; border-radius: 4px;">
+                                            <summary style="cursor: pointer; color: var(--primary);">View Description
+                                            </summary>
+                                            <p style="margin-top: 0.5rem;">
+                                                <%= complaint.description %>
+                                            </p>
+                                        </details>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <% let badgeColor='var(--text)' ; let badgeBg='var(--bg-hover)' ; if
+                                            (complaint.status==='Pending' ) { badgeColor='#ca8a04' ;
+                                            badgeBg='rgba(202, 138, 4, 0.1)' ; } else if
+                                            (complaint.status==='In Progress' ) { badgeColor='#2563eb' ;
+                                            badgeBg='rgba(37, 99, 235, 0.1)' ; } else if (complaint.status==='Resolved'
+                                            ) { badgeColor='#16a34a' ; badgeBg='rgba(22, 163, 74, 0.1)' ; } else if
+                                            (complaint.status==='Rejected' ) { badgeColor='#dc2626' ;
+                                            badgeBg='rgba(220, 38, 38, 0.1)' ; } %>
+                                            <span class="badge"
+                                                style="background: <%= badgeBg %>; color: <%= badgeColor %>; border: 1px solid <%= badgeColor %>; font-size: 0.8rem;">
+                                                <%= complaint.status %>
+                                            </span>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <form action="/admin/complaints/status" method="POST"
+                                            style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 200px;">
+                                            <input type="hidden" name="id" value="<%= complaint.id %>">
+                                            <select name="status"
+                                                style="padding: 0.4rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text);">
+                                                <option value="Pending" <%=complaint.status==='Pending' ? 'selected'
+                                                    : '' %>>Pending</option>
+                                                <option value="In Progress" <%=complaint.status==='In Progress'
+                                                    ? 'selected' : '' %>>In Progress</option>
+                                                <option value="Resolved" <%=complaint.status==='Resolved' ? 'selected'
+                                                    : '' %>>Resolved</option>
+                                                <option value="Rejected" <%=complaint.status==='Rejected' ? 'selected'
+                                                    : '' %>>Rejected</option>
+                                            </select>
+                                            <input type="text" name="admin_remarks" placeholder="Admin remarks..."
+                                                value="<%= complaint.admin_remarks || '' %>"
+                                                style="padding: 0.4rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text);">
+                                            <button type="submit" class="btn"
+                                                style="padding: 0.4rem; font-size: 0.8rem;">Update</button>
+                                        </form>
+                                        <% if (complaint.image_url) { %>
+                                            <a href="<%= complaint.image_url %>" target="_blank"
+                                                style="display: inline-block; margin-top: 0.5rem; font-size: 0.8rem; color: var(--primary); text-decoration: none;"><i
+                                                    class="fa-solid fa-image"></i> View Attachment</a>
+                                            <% } %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+    </div>
+</div>
+
+<script src="/js/filter.js"></script>
+
+<%- include('../partials/footer') %>

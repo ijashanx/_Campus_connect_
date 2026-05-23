@@ -1,0 +1,110 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/_adminSidebar', { activeMenu: 'donations' }) %>
+
+    <div class="admin-content">
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 2rem;">Donations Management</h1>
+        
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <!-- Filter Sidebar -->
+            <div style="flex: 1; min-width: 250px; max-width: 300px;">
+                <div class="glass-card" style="position: sticky; top: 20px;">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;">Filters</h3>
+                    <form id="filter-form" action="/admin/donations" method="GET">
+                        <div style="margin-bottom: 1.2rem;">
+                            <label style="display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">Search</label>
+                            <input type="text" name="keyword" placeholder="Title or description..." style="width: 100%; padding: 0.5rem; font-size: 0.9rem;" value="<%= typeof filters !== 'undefined' && filters.keyword ? filters.keyword : '' %>">
+                        </div>
+
+                        <div style="margin-bottom: 1.2rem;">
+                            <label style="display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">Status</label>
+                            <select name="status" style="width: 100%; padding: 0.5rem; font-size: 0.9rem;">
+                                <option value="">All Statuses</option>
+                                <option value="Available" <%= typeof filters !== 'undefined' && filters.status === 'Available' ? 'selected' : '' %>>Available</option>
+                                <option value="Requested" <%= typeof filters !== 'undefined' && filters.status === 'Requested' ? 'selected' : '' %>>Requested</option>
+                                <option value="Donated" <%= typeof filters !== 'undefined' && filters.status === 'Donated' ? 'selected' : '' %>>Donated</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Area -->
+            <div style="flex: 3; min-width: 60%;">
+                <div id="results-container" style="transition: opacity 0.2s;">
+                    <div class="glass-card" style="padding: 1.5rem; border: 2px solid var(--primary);">
+                        <% if (donations.length === 0) { %>
+                            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No items found.</p>
+                        <% } else { %>
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                                    <thead>
+                                        <tr style="border-bottom: 2px solid var(--border);">
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">ID</th>
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Item Name</th>
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Type</th>
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Posted By</th>
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Donor</th>
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Recipient</th>
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase;">Status</th>
+                                            <th style="padding: 0.8rem; font-size: 0.85rem; text-transform: uppercase; text-align: right;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% donations.forEach(item => { %>
+                                            <tr style="border-bottom: 1px solid var(--border);">
+                                                <td style="padding: 0.8rem; font-family: monospace; color: var(--text-muted);">#<%= item.id %></td>
+                                                <td style="padding: 0.8rem; font-weight: bold;"><%= item.title %></td>
+                                                <td style="padding: 0.8rem;">
+                                                    <span class="badge" style="text-transform: uppercase; font-size: 0.75rem; background: var(--bg); border: 1px solid var(--border);">
+                                                        <%= item.donation_type === 'request' ? 'Demand' : 'Offer' %>
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 0.8rem;"><%= item.username %></td>
+                                                <td style="padding: 0.8rem;">
+                                                    <% 
+                                                        let donorName = 'N/A';
+                                                        if (item.donation_type === 'offer') donorName = item.username;
+                                                        else if (item.donor_username) donorName = item.donor_username;
+                                                    %>
+                                                    <%= donorName %>
+                                                </td>
+                                                <td style="padding: 0.8rem;">
+                                                    <% 
+                                                        let recipientName = 'N/A';
+                                                        if (item.donation_type === 'request') recipientName = item.username;
+                                                        else if (item.requester_username) recipientName = item.requester_username;
+                                                    %>
+                                                    <%= recipientName %>
+                                                </td>
+                                                <td style="padding: 0.8rem;">
+                                                    <% 
+                                                        let label = item.status;
+                                                        let col = 'var(--text)';
+                                                        if (item.status === 'Available') { label = 'Available'; col = '#16a34a'; }
+                                                        else if (item.status === 'Requested') { label = item.donation_type === 'request' ? 'In Progress' : 'Requested'; col = '#ea580c'; }
+                                                        else if (item.status === 'Donated') { label = 'Completed'; col = '#6b7280'; }
+                                                    %>
+                                                    <span style="color: <%= col %>; font-weight: bold;"><%= label %></span>
+                                                </td>
+                                                <td style="padding: 0.8rem; text-align: right;">
+                                                    <form action="/admin/donations/<%= item.id %>/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to completely delete this item?');">
+                                                        <button type="submit" class="btn" style="background: #ef4444; color: white; padding: 0.3rem 0.6rem; font-size: 0.8rem; border: none; cursor: pointer;">Delete</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/filter.js"></script>
+<%- include('../partials/footer') %>

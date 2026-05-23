@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/_adminSidebar', { activeMenu: 'users' }) %>
+
+    <div class="admin-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin: 0;">User Management</h1>
+                <p style="color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">View, moderate, and manage student accounts.</p>
+            </div>
+            <div>
+                <form action="/admin/users" method="GET" style="display: flex; gap: 0.5rem; margin: 0;">
+                    <input type="text" name="keyword" placeholder="Search users..." value="<%= typeof filters !== 'undefined' ? filters.keyword : '' %>" style="padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); min-width: 250px;">
+                    <button type="submit" class="btn"><i class="fa-solid fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <% if (users.length === 0) { %>
+                <p style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found.</p>
+            <% } else { %>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border);">
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">ID</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">User</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Role</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Status</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Joined</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% users.forEach(u => { %>
+                                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                                    <td style="padding: 1rem; font-family: monospace; color: var(--text-muted);">#<%= u.id %></td>
+                                    <td style="padding: 1rem;">
+                                        <div style="font-weight: 600;"><%= u.full_name || u.username %></div>
+                                        <div style="font-size: 0.85rem; color: var(--text-muted);"><%= u.email %></div>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <span class="badge" style="background: var(--surface); border: 1px solid var(--border);"><%= u.role %></span>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <% let bg = u.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : (u.status === 'Suspended' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)'); %>
+                                        <% let color = u.status === 'Active' ? '#10b981' : (u.status === 'Suspended' ? '#f59e0b' : '#ef4444'); %>
+                                        <span class="badge" style="background: <%= bg %>; color: <%= color %>; border: 1px solid <%= color %>;">
+                                            <%= u.status %>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                                        <%= new Date(u.created_at).toLocaleDateString() %>
+                                    </td>
+                                    <td style="padding: 1rem; text-align: right;">
+                                        <% if (u.id !== user.id) { %>
+                                            <form action="/admin/users/<%= u.id %>/status" method="POST" style="display: flex; gap: 0.5rem; justify-content: flex-end; margin: 0;">
+                                                <select name="status" style="padding: 0.4rem; border-radius: 4px; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                                                    <option value="Active" <%= u.status === 'Active' ? 'selected' : '' %>>Active</option>
+                                                    <option value="Suspended" <%= u.status === 'Suspended' ? 'selected' : '' %>>Suspended</option>
+                                                    <option value="Banned" <%= u.status === 'Banned' ? 'selected' : '' %>>Banned</option>
+                                                </select>
+                                                <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Save</button>
+                                            </form>
+                                        <% } else { %>
+                                            <span style="font-size: 0.85rem; color: var(--text-muted);">You</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

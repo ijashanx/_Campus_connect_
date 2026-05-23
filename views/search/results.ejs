@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+
+<div style="max-width: 1200px; margin: 4rem auto; padding: 0 1rem;">
+    <h1 style="margin-bottom: 2rem;">Search Results for "<%= query %>"</h1>
+
+    <% let totalResults = results.notes.length + results.donations.length + results.complaints.length; %>
+    
+    <% if (totalResults === 0) { %>
+        <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+            <i class="fa-solid fa-magnifying-glass" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.5;"></i>
+            <h3>No results found</h3>
+            <p style="color: var(--text-muted);">Try adjusting your search terms.</p>
+        </div>
+    <% } else { %>
+        <div style="display: flex; flex-direction: column; gap: 3rem;">
+
+            <% if (results.notes.length > 0) { %>
+                <section>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--primary); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                        <h2>Study Notes (<%= results.notes.length %>)</h2>
+                        <a href="/notes?keyword=<%= encodeURIComponent(query) %>" style="color: var(--primary); font-weight: bold; text-decoration: none;">View All <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                    <%- include('../partials/_noteGrid', { notes: results.notes, savedNoteIds }) %>
+                </section>
+            <% } %>
+
+            <% if (results.donations.length > 0) { %>
+                <section>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--primary); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                        <h2>Donations (<%= results.donations.length %>)</h2>
+                        <a href="/donations?keyword=<%= encodeURIComponent(query) %>" style="color: var(--primary); font-weight: bold; text-decoration: none;">View All <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                    <%- include('../partials/_donationGrid', { donations: results.donations, savedDonationIds }) %>
+                </section>
+            <% } %>
+
+            <% if (results.complaints.length > 0) { %>
+                <section>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--primary); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                        <h2>Complaints (<%= results.complaints.length %>)</h2>
+                        <a href="/complaints?keyword=<%= encodeURIComponent(query) %>" style="color: var(--primary); font-weight: bold; text-decoration: none;">View All <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                    <%- include('../partials/_complaintGrid', { complaints: results.complaints, isAdmin: user && user.role === 'admin', savedComplaintIds }) %>
+                </section>
+            <% } %>
+
+        </div>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>

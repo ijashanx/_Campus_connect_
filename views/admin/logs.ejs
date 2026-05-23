@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/_adminSidebar', { activeMenu: 'logs' }) %>
+
+    <div class="admin-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin: 0;">Activity Logs</h1>
+                <p style="color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">Audit trail of all administrative actions taken on the platform.</p>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <% if (logs.length === 0) { %>
+                <p style="text-align: center; color: var(--text-muted); padding: 3rem;">No activity logs found.</p>
+            <% } else { %>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border);">
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">ID</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Date & Time</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Admin</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Action Type</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% logs.forEach(log => { %>
+                                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                                    <td style="padding: 1rem; font-family: monospace; color: var(--text-muted);">#<%= log.id %></td>
+                                    <td style="padding: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                                        <%= new Date(log.created_at).toLocaleString() %>
+                                    </td>
+                                    <td style="padding: 1rem; font-weight: 600;">@<%= log.admin_username %></td>
+                                    <td style="padding: 1rem;">
+                                        <span class="badge" style="background: var(--surface); border: 1px solid var(--border);"><%= log.action_type %></span>
+                                    </td>
+                                    <td style="padding: 1rem; color: var(--text-muted);"><%= log.description %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

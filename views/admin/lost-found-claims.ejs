@@ -1,0 +1,169 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout" style="display: flex; min-height: calc(100vh - 70px);">
+    <%- include('../partials/_adminSidebar', { activeMenu: 'lost-found-claims' }) %>
+
+    <div class="admin-content" style="flex: 1; padding: 2rem; overflow-y: auto;">
+        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 0.5rem;">Lost & Found Claims</h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Review and manage verification claims submitted by users. Compare proof responses with the original listing details and verify physical handover OTPs.</p>
+
+        <% if (error) { %>
+            <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--danger);">
+                <i class="fa-solid fa-circle-exclamation"></i> <%= error %>
+            </div>
+        <% } %>
+
+        <% if (success) { %>
+            <div style="background: rgba(22, 163, 74, 0.2); color: #16a34a; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #16a34a;">
+                <i class="fa-solid fa-circle-check"></i> <%= success %>
+            </div>
+        <% } %>
+
+        <% if (claims.length === 0) { %>
+            <div class="glass-card" style="text-align: center; padding: 3rem 1rem;">
+                <i class="fa-solid fa-folder-open" style="font-size: 3.5rem; color: var(--text-muted); margin-bottom: 1.5rem;"></i>
+                <h3 style="margin-bottom: 0.5rem;">No Claim Requests</h3>
+                <p style="color: var(--text-muted);">There are no claim requests currently submitted in the system.</p>
+            </div>
+        <% } else { %>
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                <% claims.forEach(claim => { %>
+                    <div class="glass-card" style="padding: 1.8rem; border: 1px solid var(--border); background: var(--surface); position: relative;">
+                        <!-- Header with claimant, status and date -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Claim ID: #<%= claim.id %></span>
+                                <h3 style="margin: 0.2rem 0 0 0; font-size: 1.3rem;">
+                                    Claimant: <span style="color: var(--primary);"><%= claim.claimer_full_name || claim.claimer_username %></span> 
+                                    (<%= claim.claimer_email %>)
+                                </h3>
+                                <small style="color: var(--text-muted);">Submitted on <%= new Date(claim.created_at).toLocaleString() %></small>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 0.8rem;">
+                                <span class="badge" style="background: var(--bg); border: 1px solid var(--border); font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 4px;">
+                                    Post type: <strong style="color: var(--primary);"><%= claim.item_type.toUpperCase() %></strong>
+                                </span>
+                                <% 
+                                    let badgeBg = 'rgba(202, 138, 4, 0.2)';
+                                    let badgeColor = '#ca8a04';
+                                    if (claim.status === 'Approved') {
+                                        badgeBg = 'rgba(22, 163, 74, 0.2)';
+                                        badgeColor = '#16a34a';
+                                    } else if (claim.status === 'Rejected') {
+                                        badgeBg = 'rgba(239, 68, 68, 0.2)';
+                                        badgeColor = '#ef4444';
+                                    }
+                                %>
+                                <span style="background: <%= badgeBg %>; color: <%= badgeColor %>; padding: 0.4rem 1rem; font-weight: bold; border-radius: 6px; font-size: 0.9rem; border: 1px solid <%= badgeColor %>;">
+                                    Claim: <%= claim.status %>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Side-by-side comparison -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <!-- Original Listing Info -->
+                            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 1.2rem; border-radius: 8px;">
+                                <h4 style="color: var(--primary); border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-circle-info"></i> Original Listing Details
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.95rem;">
+                                    <p><strong>Item Title:</strong> <span style="font-weight: 600;"><%= claim.item_title %></span></p>
+                                    <p><strong>Description:</strong> <%= claim.item_description %></p>
+                                    
+                                    <div style="background: rgba(99, 102, 241, 0.08); padding: 0.8rem; border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                                        <strong style="color: var(--primary); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-eye-slash"></i> Secret Hidden Details:</strong>
+                                        <p style="margin: 0; font-weight: 600; font-size: 0.95rem;"><%= claim.item_hidden_details || 'None specified' %></p>
+                                    </div>
+                                    
+                                    <p><strong>Location Filed:</strong> <%= claim.item_location %></p>
+                                    <p><strong>Reporter (Poster):</strong> <%= claim.poster_full_name || claim.poster_username %> (<%= claim.poster_email %>)</p>
+                                    <p><strong>Contact Info:</strong> <%= claim.item_contact_info %></p>
+                                </div>
+                            </div>
+
+                            <!-- Claimant's Proof Info -->
+                            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 1.2rem; border-radius: 8px;">
+                                <h4 style="color: var(--accent); border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-shield-halved"></i> Claimant's Proof Details
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.95rem;">
+                                    <p><strong>Stated Color:</strong> <span style="font-weight: 600;"><%= claim.proof_color || 'N/A' %></span></p>
+                                    <p><strong>Stated Location:</strong> <%= claim.proof_location || 'N/A' %></p>
+                                    
+                                    <div style="background: rgba(245, 158, 11, 0.08); padding: 0.8rem; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                                        <strong style="color: var(--accent); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-clipboard-question"></i> Stated Secret/Hidden markings:</strong>
+                                        <p style="margin: 0; font-weight: 600; font-size: 0.95rem;"><%= claim.proof_description %></p>
+                                    </div>
+
+                                    <% if (claim.proof_image_url) { %>
+                                        <div>
+                                            <strong>Attached Proof Image:</strong><br>
+                                            <a href="<%= claim.proof_image_url %>" target="_blank" style="display: inline-block; margin-top: 0.5rem;">
+                                                <img src="<%= claim.proof_image_url %>" style="max-width: 200px; max-height: 150px; border-radius: 6px; border: 1px solid var(--border);" alt="Claim proof image">
+                                            </a>
+                                        </div>
+                                    <% } else { %>
+                                        <p><strong>Attached Proof Image:</strong> <span style="color: var(--text-muted);">None attached</span></p>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action controls section -->
+                        <div style="background: var(--bg); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+                            <% if (claim.status === 'Pending') { %>
+                                <div style="color: var(--text-muted); font-size: 0.9rem;">
+                                    <i class="fa-solid fa-circle-question"></i> Do the details match? Approve to email the OTP to the claimant, or reject the request.
+                                </div>
+                                <div style="display: flex; gap: 1rem;">
+                                    <form action="/admin/lost-found/claims/<%= claim.id %>/approve" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn" style="background: #16a34a; color: #fff; font-weight: bold; border: 1px solid #16a34a;">Approve Claim</button>
+                                    </form>
+                                    <form action="/admin/lost-found/claims/<%= claim.id %>/reject" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; font-weight: bold;">Reject Claim</button>
+                                    </form>
+                                </div>
+                            <% } else if (claim.status === 'Approved') { %>
+                                <% 
+                                    // Check the original item's status via db property if available
+                                    // If the item status is 'Resolved', it means handover was verified successfully
+                                %>
+                                <% if (claim.item_status === 'Resolved') { %>
+                                    <div style="color: #16a34a; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; width: 100%; justify-content: center;">
+                                        <i class="fa-solid fa-circle-check"></i> Handover Verified & Listing Resolved (Closed)
+                                    </div>
+                                <% } else { %>
+                                    <!-- Handover Verification Form -->
+                                    <div style="flex: 1; min-width: 280px;">
+                                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); display: flex; align-items: center; gap: 0.4rem;">
+                                            <i class="fa-solid fa-key"></i> OTP Handover Verification
+                                        </h4>
+                                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+                                            The claimant has been emailed an OTP. Meet them physically, ask for their OTP, and enter it below to verify the handover.
+                                            <br>
+                                            <span style="font-weight: 600; color: var(--primary);">Expected OTP / PIN: <%= claim.item_verification_pin || 'Unavailable' %></span>
+                                        </p>
+                                    </div>
+                                    <div style="min-width: 250px;">
+                                        <form action="/admin/lost-found/claims/<%= claim.id %>/verify-otp" method="POST" style="margin: 0; display: flex; gap: 0.5rem;">
+                                            <input type="text" name="otp" placeholder="Enter OTP/PIN" maxlength="10" required style="padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; text-align: center; width: 150px;">
+                                            <button type="submit" class="btn" style="background: var(--primary); color: var(--bg); font-weight: bold;">Verify & Handover</button>
+                                        </form>
+                                    </div>
+                                <% } %>
+                            <% } else if (claim.status === 'Rejected') { %>
+                                <div style="color: #ef4444; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; width: 100%;">
+                                    <i class="fa-solid fa-circle-xmark"></i> Claim Rejected (No actions available).
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,187 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/_adminSidebar', { activeMenu: locals.activeMenu }) %>
+
+    <div class="admin-content">
+        <div style="border-bottom: 2px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; margin: 0;">Dashboard Overview</h1>
+                <p style="color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">Welcome back, Administrator. Here's what's happening today.</p>
+            </div>
+            <div style="text-align: right;">
+                <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; font-size: 0.9rem;">
+                    <i class="fa-solid fa-flag"></i> <%= stats.pendingReports %> Pending Reports
+                </span>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 4px solid #8b5cf6;">
+                <i class="fa-solid fa-users" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 1rem;"></i>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);"><%= stats.totalUsers %></div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Total Users</p>
+            </div>
+            
+            <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 4px solid #ef4444;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);"><%= stats.pendingComplaints %></div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Pending Complaints</p>
+            </div>
+            
+            <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 4px solid #10b981;">
+                <i class="fa-solid fa-hand-holding-heart" style="font-size: 2rem; color: #10b981; margin-bottom: 1rem;"></i>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);"><%= stats.activeDonations %></div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Active Donations</p>
+            </div>
+            
+            <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 4px solid #f59e0b;">
+                <i class="fa-solid fa-box-open" style="font-size: 2rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);"><%= stats.totalOpenLostItems %></div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Open Lost Items</p>
+            </div>
+
+            <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 4px solid #06b6d4;">
+                <i class="fa-solid fa-clipboard-question" style="font-size: 2rem; color: #06b6d4; margin-bottom: 1rem;"></i>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);"><%= stats.totalOpenFoundItems %></div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Open Found Items</p>
+            </div>
+
+            <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 4px solid #3b82f6;">
+                <i class="fa-solid fa-book" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);"><%= stats.totalNotes %></div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Total Notes</p>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 2rem; margin-bottom: 3rem;">
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;"><i class="fa-solid fa-chart-pie"></i> Platform Distribution</h3>
+                <div style="height: 250px;">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;"><i class="fa-solid fa-chart-bar"></i> Activity Overview</h3>
+                <div style="height: 250px;">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; display: flex; justify-content: space-between;">
+                <span><i class="fa-solid fa-clock-rotate-left"></i> Recent Lost & Found Items</span>
+                <a href="/admin/lost-found" style="font-size: 0.9rem; color: var(--primary); text-decoration: none;">View All</a>
+            </h3>
+
+            <% if (items.length === 0) { %>
+                <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No items currently exist.</p>
+            <% } else { %>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border);">
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">ID</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Title</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Type</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Creator</th>
+                                <th style="padding: 1rem; font-size: 0.8rem; text-transform: uppercase;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% items.forEach(item => { %>
+                                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                                    <td style="padding: 1rem; font-family: monospace; color: var(--text-muted);">#<%= item.id %></td>
+                                    <td style="padding: 1rem; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <a href="/lost-found/<%= item.id %>" style="color: var(--text); font-weight: 600; text-decoration: none;">
+                                            <%= item.title %>
+                                        </a>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <span class="badge" style="background: #ffffff; color: #000000; border: 1px solid #000000; text-transform: uppercase;">
+                                            <%= item.type %>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 1rem;"><%= item.username %></td>
+                                    <td style="padding: 1rem;">
+                                        <span class="badge" style="background: <%= item.status==='Resolved'?'rgba(22, 163, 74, 0.1)':'rgba(234, 88, 12, 0.1)' %>; color: <%= item.status==='Resolved'?'#16a34a':'#ea580c' %>;">
+                                            <%= item.status %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Chart configurations
+    Chart.defaults.color = '#9ca3af';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // Distribution Doughnut Chart
+    const distCtx = document.getElementById('distributionChart').getContext('2d');
+    new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Users', 'Notes', 'Donations', 'Lost & Found', 'Complaints'],
+            datasets: [{
+                data: [
+                    <%= stats.totalUsers %>, 
+                    <%= stats.totalNotes %>, 
+                    <%= stats.activeDonations + stats.pendingRequests %>, 
+                    <%= stats.totalOpenItems + stats.claimedItems %>, 
+                    <%= stats.pendingComplaints + stats.resolvedComplaints %>
+                ],
+                backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+
+    // Activity Bar Chart
+    const actCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(actCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Open Items', 'Active Donations', 'Pending Complaints', 'Pending Reports'],
+            datasets: [{
+                label: 'Action Required',
+                data: [
+                    <%= stats.totalOpenItems %>, 
+                    <%= stats.activeDonations %>, 
+                    <%= stats.pendingComplaints %>, 
+                    <%= stats.pendingReports %>
+                ],
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(156, 163, 175, 0.1)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>
