@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+
+    <div
+        style="border-bottom: 3px solid var(--primary); padding-bottom: 2rem; margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; text-transform: uppercase;">Lost &
+                Found</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Help the community recover their
+                missing items.</p>
+        </div>
+        <% if (user && user.role !== 'admin') { %>
+        <a href="/lost-found/new" class="btn btn-lg"
+            style="box-shadow: 4px 4px 0px #000; transform: translateY(-4px); border-radius: 0; border: 2px solid #000;">
+            <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Report Item
+        </a>
+        <% } %>
+    </div>
+
+    <form method="GET" action="/lost-found" style="background: var(--surface); border: 1px solid var(--border); padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2.5rem; border-radius: 4px;">
+        <!-- Left side: Title and Search -->
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+            <span style="font-weight: 800; font-size: 1.1rem; color: var(--primary); text-transform: uppercase; letter-spacing: -0.5px;">Filters</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; max-width: 300px;">
+                <i class="fa-solid fa-search" style="color: var(--text-muted);"></i>
+                <input type="text" name="keyword" placeholder="Search keyword..." value="<%= locals.filters && filters.keyword ? filters.keyword : '' %>" style="border: none; background: transparent; padding: 0.4rem; color: var(--text); outline: none; width: 100%; border-bottom: 1px solid var(--border);">
+            </div>
+        </div>
+        
+        <!-- Right side: Filters & Actions -->
+        <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <!-- Type -->
+            <select name="type" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; cursor: pointer; outline: none; padding: 0.4rem 0;">
+                <option value="" style="background: var(--surface);">All Types</option>
+                <option value="lost" <%= locals.filters && filters.type === 'lost' ? 'selected' : '' %> style="background: var(--surface);">Lost</option>
+                <option value="found" <%= locals.filters && filters.type === 'found' ? 'selected' : '' %> style="background: var(--surface);">Found</option>
+            </select>
+            
+            <!-- Category -->
+            <select name="category" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; cursor: pointer; outline: none; padding: 0.4rem 0;">
+                <option value="" style="background: var(--surface);">All Categories</option>
+                <option value="Electronics" <%= locals.filters && filters.category === 'Electronics' ? 'selected' : '' %> style="background: var(--surface);">Electronics</option>
+                <option value="Documents" <%= locals.filters && filters.category === 'Documents' ? 'selected' : '' %> style="background: var(--surface);">Documents</option>
+                <option value="Accessories" <%= locals.filters && filters.category === 'Accessories' ? 'selected' : '' %> style="background: var(--surface);">Accessories</option>
+                <option value="Stationery" <%= locals.filters && filters.category === 'Stationery' ? 'selected' : '' %> style="background: var(--surface);">Stationery</option>
+                <option value="Other" <%= locals.filters && filters.category === 'Other' ? 'selected' : '' %> style="background: var(--surface);">Other</option>
+            </select>
+
+            <!-- Location -->
+            <input type="text" name="location" placeholder="Location..." value="<%= locals.filters && filters.location ? filters.location : '' %>" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; outline: none; width: 120px; border-bottom: 1px solid var(--border); padding: 0.4rem 0;">
+
+            <!-- Date -->
+            <input type="date" name="date" value="<%= locals.filters && filters.date ? filters.date : '' %>" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; outline: none; cursor: pointer; padding: 0.4rem 0; width: 140px;">
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="submit" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Filter</button>
+                <a href="/lost-found" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.9rem; text-decoration: none;">Clear</a>
+            </div>
+        </div>
+    </form>
+
+    <div id="results-container" style="transition: opacity 0.2s;">
+        <%- include('../partials/_lostFoundGrid', { items, savedLostFoundIds: locals.savedLostFoundIds || [] }) %>
+    </div>
+
+    <%- include('../partials/footer') %>

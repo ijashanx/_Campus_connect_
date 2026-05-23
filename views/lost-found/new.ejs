@@ -1,0 +1,297 @@
+<%- include('../partials/header') %>
+
+    <div class="glass-card" style="max-width: 600px; margin: 2rem auto; border: 2px solid var(--primary); padding: 2.5rem; position: relative;">
+        <h2 style="margin-bottom: 1.5rem; font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;"><i class="fa-solid fa-file-pen"></i> Report Lost / Found Item</h2>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--danger);">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <div style="margin-bottom: 1.5rem; background: rgba(99, 102, 241, 0.08); border: 1px solid var(--border); padding: 1rem; border-radius: 8px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.4;">
+            After you post, you’ll get a <strong>4-digit verification PIN</strong> on the item’s page. Share it only in person to verify claim/return and close the listing.
+        </div>
+        <form id="report-form" action="/lost-found" method="POST" enctype="multipart/form-data">
+            
+            <!-- Item Name -->
+            <div style="margin-bottom: 1.2rem;">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Item Name <span style="color: var(--danger);">*</span></label>
+                <input type="text" name="title" required style="width: 100%; padding: 0.6rem;"
+                    placeholder="E.g., Tupperware Bottle, Casio Watch" pattern="^[a-zA-Z\s]+$" title="Item Name can only contain letters and spaces (no numbers or special characters allowed)."
+                    value="<%= typeof item !== 'undefined' && item.title ? item.title : '' %>">
+            </div>
+
+            <!-- Status (Lost / Found) -->
+            <div style="margin-bottom: 1.2rem;">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Status (Lost / Found) <span style="color: var(--danger);">*</span></label>
+                <select name="type" required style="width: 100%; padding: 0.6rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                    <option value="lost" <%= typeof item !== 'undefined' && item.type === 'lost' ? 'selected' : '' %>>Lost</option>
+                    <option value="found" <%= typeof item !== 'undefined' && item.type === 'found' ? 'selected' : '' %>>Found</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; background: rgba(245, 158, 11, 0.08); border: 1px solid var(--border); padding: 1rem; border-radius: 8px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.4;">
+                <i class="fa-solid fa-clock"></i> <strong>Admin Approval Required:</strong> Your post will go live on the public feed after being reviewed and approved by an Admin.
+            </div>
+
+            <!-- Category -->
+            <div style="margin-bottom: 1.2rem;">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Category <span style="color: var(--danger);">*</span></label>
+                <select name="category" required style="width: 100%; padding: 0.6rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                    <option value="Electronics" <%= typeof item !== 'undefined' && item.category === 'Electronics' ? 'selected' : '' %>>Electronics</option>
+                    <option value="Documents" <%= typeof item !== 'undefined' && item.category === 'Documents' ? 'selected' : '' %>>Documents</option>
+                    <option value="Accessories" <%= typeof item !== 'undefined' && item.category === 'Accessories' ? 'selected' : '' %>>Accessories</option>
+                    <option value="Stationery" <%= typeof item !== 'undefined' && item.category === 'Stationery' ? 'selected' : '' %>>Stationery</option>
+                    <option value="Other" <%= typeof item !== 'undefined' && (item.category === 'Other' || !item.category) ? 'selected' : '' %>>Other</option>
+                </select>
+            </div>
+
+            <!-- Color & Brand -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem;">
+                <div>
+                    <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Color <span style="color: var(--danger);">*</span></label>
+                    <input type="text" name="color" required style="width: 100%; padding: 0.6rem;"
+                        placeholder="E.g., Blue, Black, Silver"
+                        value="<%= typeof item !== 'undefined' && item.color ? item.color : '' %>">
+                </div>
+                <div>
+                    <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Brand (Optional)</label>
+                    <input type="text" name="brand" style="width: 100%; padding: 0.6rem;"
+                        placeholder="E.g., Dell, Nike, Apple"
+                        value="<%= typeof item !== 'undefined' && item.brand ? item.brand : '' %>">
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div style="margin-bottom: 1.2rem;">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Item Description (Public Details: shape, size, look) <span style="color: var(--danger);">*</span></label>
+                <textarea name="description" required style="width: 100%; padding: 0.6rem;" rows="3" placeholder="Describe the item public details. Do NOT mention secret unique details."><%= typeof item !== 'undefined' && item.description ? item.description : '' %></textarea>
+            </div>
+
+            <!-- Secret Details -->
+            <div style="margin-bottom: 1.2rem;">
+                <label id="hidden-details-label" style="font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--primary);">Secret Hidden Details (Only visible to you & Admin)</label>
+                <textarea id="hidden-details-textarea" name="hidden_details" style="width: 100%; padding: 0.6rem; border: 1.5px solid var(--primary);" rows="3" placeholder="E.g., screen cracked on bottom-right, name written on back, dog wallpaper, serial number. Users must guess/prove these to claim."><%= typeof item !== 'undefined' && item.hidden_details ? item.hidden_details : '' %></textarea>
+            </div>
+
+            <!-- Location & Date -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem;">
+                <div>
+                    <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Location Lost/Found <span style="color: var(--danger);">*</span></label>
+                    <input type="text" name="location" required style="width: 100%; padding: 0.6rem;" placeholder="E.g., Block A, Cafeteria"
+                        value="<%= typeof item !== 'undefined' && item.location ? item.location : '' %>">
+                </div>
+                <div>
+                    <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Date Lost/Found <span style="color: var(--danger);">*</span></label>
+                    <input type="date" name="date" required style="width: 100%; padding: 0.6rem;"
+                        value="<%= typeof item !== 'undefined' && item.date ? item.date : '' %>">
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div style="margin-bottom: 1.2rem;">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Contact Info (10-Digit Mobile Number) <span style="color: var(--danger);">*</span></label>
+                <input type="text" name="contact_info" required style="width: 100%; padding: 0.6rem;" placeholder="E.g., 9876543210" pattern="\d{10}" maxlength="10" title="Must be exactly a 10-digit mobile number (numbers only)."
+                    value="<%= typeof item !== 'undefined' && item.contact_info ? item.contact_info : '' %>">
+            </div>
+
+            <!-- Image Upload -->
+            <div style="margin-bottom: 1.8rem;">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Upload Image <span style="color: var(--danger);">*</span></label>
+                <input type="file" name="image" accept="image/*" required style="width: 100%; padding: 0.4rem 0;">
+                <small style="color: var(--text-muted); display: block; margin-top: 0.2rem;">Provide a clear picture of the item. Mandatory field.</small>
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; padding: 0.8rem; font-weight: bold; text-transform: uppercase;">Submit Report</button>
+        </form>
+    </div>
+
+    <!-- Modals Overlay -->
+    <!-- Duplicate Warning Modal -->
+    <div id="duplicateModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="max-width: 450px; padding: 2rem; border: 2px solid var(--danger); text-align: center; background: var(--bg); box-shadow: 8px 8px 0 #000; border-radius: 4px;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 3.5rem; color: #ef4444; margin-bottom: 1.2rem;"></i>
+            <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.8rem; color: var(--text); text-transform: uppercase; letter-spacing: -0.5px;">Duplicate Detected</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1rem; line-height: 1.4;" id="duplicateModalText">
+                A similar item has already been reported in the system.
+            </p>
+            <button onclick="closeDuplicateModal()" class="btn" style="background: #ef4444; width: 100%; font-weight: bold; border-color: #ef4444;">OK</button>
+        </div>
+    </div>
+
+    <!-- Match Detection Modal -->
+    <div id="matchModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="max-width: 550px; width: 90%; padding: 2.2rem; border: 2px solid var(--primary); background: var(--bg); box-shadow: 8px 8px 0 #000; border-radius: 4px;">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-magnifying-glass-chart" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                <h3 style="font-size: 1.6rem; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: -0.5px; margin: 0;">Potential Match Found!</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.3rem; margin-bottom: 0;">A similar item already exists in the Lost/Found section.</p>
+            </div>
+            
+            <div style="background: var(--surface); border: 2px solid var(--primary); padding: 1.2rem; display: flex; gap: 1.2rem; align-items: center; margin-bottom: 1.8rem; border-radius: 4px;">
+                <div style="text-align: center; padding-right: 0.5rem;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--primary); font-weight: bold; margin-bottom: 0.2rem; white-space: nowrap;">Match Score</div>
+                    <div style="font-size: 2.5rem; font-weight: 900; color: var(--text); line-height: 1;" id="matchScoreVal">80%</div>
+                </div>
+                <div style="width: 1px; height: 50px; background: var(--border);"></div>
+                <div style="flex: 1; min-width: 0; padding-left: 0.5rem;" id="matchDetailsVal">
+                    <strong style="font-size: 1.15rem; display: block; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 0.2rem;">Item Name</strong>
+                    <span style="font-size: 0.85rem; color: var(--text-muted); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="matchMetaVal">Category • Location • Date</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="#" id="viewMatchPostBtn" target="_blank" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.6rem 0; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> View Post
+                </a>
+                <button id="continueAnywayBtn" class="btn" style="flex: 1; padding: 0.6rem 0; font-weight: bold; text-transform: uppercase;">Continue Anyway</button>
+            </div>
+            <div style="text-align: center; margin-top: 1.2rem;">
+                <button onclick="closeMatchModal()" style="background: none; border: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.9rem; font-weight: bold;">Cancel Submission</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('report-form');
+            const typeSelect = document.querySelector('select[name="type"]');
+            const hiddenDetailsTextarea = document.getElementById('hidden-details-textarea');
+            const hiddenDetailsLabel = document.getElementById('hidden-details-label');
+            const dateInput = document.querySelector('input[name="date"]');
+            const titleInput = document.querySelector('input[name="title"]');
+            const contactInput = document.querySelector('input[name="contact_info"]');
+
+            // Set date limits: Min = 7 days ago, Max = today
+            if (dateInput) {
+                const today = new Date();
+                const maxDateStr = today.toLocaleDateString('en-CA'); // YYYY-MM-DD
+                
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(today.getDate() - 7);
+                const minDateStr = sevenDaysAgo.toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+                dateInput.setAttribute('min', minDateStr);
+                dateInput.setAttribute('max', maxDateStr);
+            }
+
+            function updateRequiredFields() {
+                if (typeSelect.value === 'lost') {
+                    hiddenDetailsTextarea.setAttribute('required', 'required');
+                    hiddenDetailsLabel.innerHTML = 'Secret Hidden Details <span style="color: var(--danger);">*</span> (Only visible to you & Admin - Required for Lost items)';
+                } else {
+                    hiddenDetailsTextarea.removeAttribute('required');
+                    hiddenDetailsLabel.innerHTML = 'Secret Hidden Details (Only visible to you & Admin - Optional for Found items)';
+                }
+            }
+
+            typeSelect.addEventListener('change', updateRequiredFields);
+            updateRequiredFields(); // Run on page load
+
+            let overrideValidation = false;
+
+            // Intercept form submission
+            form.addEventListener('submit', function(e) {
+                if (overrideValidation) {
+                    return true;
+                }
+                
+                e.preventDefault();
+
+                // 1. Title verification
+                const titleVal = titleInput.value.trim();
+                const titleRegex = /^[a-zA-Z\s]+$/;
+                if (!titleRegex.test(titleVal)) {
+                    alert("Title is invalid! Only letters and spaces are allowed. Numbers and special characters are not permitted.\n\nTitle invalid hai! Sirf letters aur spaces allowed hain.");
+                    return false;
+                }
+
+                // 2. Date verification
+                const dateVal = new Date(dateInput.value);
+                const today = new Date();
+                today.setHours(23, 59, 59, 999);
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                sevenDaysAgo.setHours(0, 0, 0, 0);
+
+                if (dateVal > today) {
+                    alert("Date cannot be in the future!\n\nUpcoming date form mein nahi daal sakte!");
+                    return false;
+                }
+                if (dateVal < sevenDaysAgo) {
+                    alert("Date cannot be older than 7 days!\n\n7 din se zyada purani date accept nahi hogi!");
+                    return false;
+                }
+
+                // 3. Contact verification
+                const contactVal = contactInput.value.trim();
+                const contactRegex = /^\d{10}$/;
+                if (!contactRegex.test(contactVal)) {
+                    alert("Contact Info must be exactly a 10-digit mobile number! Letters, spaces, or special characters are not allowed.\n\nContact number exactly 10 digits ka hona chahiye aur special characters/spaces allowed nahi hain.");
+                    return false;
+                }
+
+                // AJAX duplicate and match check
+                const data = {
+                    title: form.title.value,
+                    category: form.category.value,
+                    color: form.color.value,
+                    brand: form.brand.value,
+                    location: form.location.value,
+                    type: form.type.value
+                };
+
+                fetch('/lost-found/check-duplicate-match', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    return res.json();
+                })
+                .then(res => {
+                    if (res.status === 'duplicate') {
+                        document.getElementById('duplicateModalText').innerText = res.message;
+                        document.getElementById('duplicateModal').style.display = 'flex';
+                    } else if (res.status === 'match') {
+                        const bestMatch = res.matches[0];
+                        document.getElementById('matchScoreVal').innerText = bestMatch.score + '%';
+                        document.getElementById('matchDetailsVal').querySelector('strong').innerText = bestMatch.title;
+                        document.getElementById('matchMetaVal').innerText = `${bestMatch.category} • ${bestMatch.color} • ${bestMatch.location} • ${bestMatch.date}`;
+                        document.getElementById('viewMatchPostBtn').href = `/lost-found/${bestMatch.id}`;
+                        document.getElementById('matchModal').style.display = 'flex';
+                    } else {
+                        // Success, submit form programmatically
+                        overrideValidation = true;
+                        form.submit();
+                    }
+                })
+                .catch(err => {
+                    console.error('Validation error:', err);
+                    // Fallback to normal submission
+                    overrideValidation = true;
+                    form.submit();
+                });
+            });
+
+            // Modal utility triggers
+            window.closeDuplicateModal = function() {
+                document.getElementById('duplicateModal').style.display = 'none';
+            };
+            window.closeMatchModal = function() {
+                document.getElementById('matchModal').style.display = 'none';
+            };
+
+            document.getElementById('continueAnywayBtn').addEventListener('click', function() {
+                overrideValidation = true;
+                form.submit();
+            });
+        });
+    </script>
+
+    <%- include('../partials/footer') %>

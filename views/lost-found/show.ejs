@@ -1,0 +1,304 @@
+<%- include('../partials/header') %>
+
+<div class="glass-card" style="max-width: 800px; margin: 2rem auto;">
+    <% if (item.is_approved === 0) { %>
+        <div style="background: rgba(245, 158, 11, 0.1); border: 2px solid #f59e0b; padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem;">
+            <i class="fa-solid fa-clock-rotate-left" style="font-size: 1.8rem; color: #f59e0b;"></i>
+            <div>
+                <strong style="color: #f59e0b; font-size: 1.1rem;">Pending Admin Approval</strong>
+                <p style="margin: 0.2rem 0 0 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">This listing is currently under review by our moderation team. It is hidden from the public feed and will go live once approved.</p>
+            </div>
+        </div>
+    <% } %>
+
+    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start;">
+        <% if (item.image_url) { %>
+            <div style="flex: 1 1 250px; max-width: 100%; height: 250px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+                <img src="<%= item.image_url %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        <% } %>
+        
+        <div style="flex: 2 1 350px; min-width: 280px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap;">
+                <h1 style="margin-bottom: 0.5rem;"><%= item.title %></h1>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <% 
+                        let badgeColor = 'var(--text)';
+                        if (item.status === 'Open') badgeColor = '#ca8a04';
+                        else if (item.status === 'Claimed') badgeColor = '#2563eb';
+                        else if (item.status === 'Resolved') badgeColor = '#16a34a';
+                    %>
+                    <span class="badge" style="background: var(--bg); color: <%= badgeColor %>; border: 1px solid <%= badgeColor %>;">
+                        <%= item.status %>
+                    </span>
+
+                    <% if (user && user.id !== item.user_id) { %>
+                        <button onclick="openReportModal('LostFound', <%= item.id %>)" class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; margin: 0;" title="Report Suspicious">
+                            <i class="fa-solid fa-flag"></i> Report
+                        </button>
+                    <% } %>
+                </div>
+            </div>
+            
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                <span class="badge" style="background: var(--accent); color: var(--bg); border: 1px solid var(--accent); margin-right: 0.5rem;"><%= item.type.toUpperCase() %></span>
+                Reported by <strong><%= item.username %></strong>
+            </p>
+
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Description</h4>
+                <p><%= item.description %></p>
+            </div>
+
+            <% if (item.hidden_details && (user && user.role === 'admin')) { %>
+                <div style="background: rgba(99, 102, 241, 0.1); border: 2px solid var(--primary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h4 style="margin-bottom: 0.5rem; color: var(--primary);"><i class="fa-solid fa-eye-slash"></i> Hidden Details / Unique Identifiers (Secret)</h4>
+                    <p style="font-weight: 600; margin: 0 0 0.5rem 0;"><%= item.hidden_details %></p>
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">This is only visible to Admins. Claimants must prove these details to verify ownership.</small>
+                </div>
+            <% } %>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <h4 style="color: var(--primary);">Location</h4>
+                    <p><%= item.location || 'N/A' %></p>
+                </div>
+                <div>
+                    <h4 style="color: var(--primary);">Date</h4>
+                    <p><%= item.date ? new Date(item.date).toLocaleDateString() : 'N/A' %></p>
+                </div>
+            </div>
+
+            <% 
+                let hasApprovedClaim = (myClaim && myClaim.status === 'Approved');
+                let showContact = (user && (user.id === item.user_id || user.role === 'admin' || hasApprovedClaim));
+            %>
+            <% if (showContact) { %>
+                <div style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid var(--primary); margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Contact Information</h4>
+                    <p><%= item.contact_info %></p>
+                </div>
+            <% } else { %>
+                <div style="background: var(--surface); padding: 1rem; border-radius: 8px; border: 1px dashed var(--border); margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.4;">
+                    <i class="fa-solid fa-lock"></i> Contact details are hidden. Submit a claim request with proof below. Once approved, the contact details and verification PIN will be unlocked.
+                </div>
+            <% } %>
+
+            <% if (user) { %>
+                <% if (user.id === item.user_id) { %>
+                    <!-- Creator sees all submitted Claim Requests -->
+                    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; border: 2px solid var(--primary); margin-bottom: 1.5rem;">
+                        <!-- Creator OTP Pin displayed permanently -->
+                        <div style="background: rgba(220, 38, 38, 0.1); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--danger); margin-bottom: 1.5rem; text-align: center;">
+                            <h4 style="color: var(--danger); margin-bottom: 0.3rem;"><i class="fa-solid fa-key"></i> Secret Verification PIN (OTP)</h4>
+                            <div style="font-size: 2.2rem; font-weight: 800; letter-spacing: 4px; font-family: monospace; color: var(--primary); margin: 0.5rem 0;"><%= item.verification_pin || '---' %></div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.4rem 0 0 0; line-height: 1.4;">
+                                Keep this PIN secure. It remains visible to you even after claim approval. The claimant will need to present this PIN to the Admin during physical handover.
+                            </p>
+                        </div>
+
+                        <h3 style="margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;"><i class="fa-solid fa-file-shield"></i> Claim Requests Received</h3>
+                        
+                        <% if (claims.length === 0) { %>
+                            <p style="color: var(--text-muted); font-size: 0.95rem; text-align: center; margin: 2rem 0;">No claim requests have been submitted yet. Keep an eye out!</p>
+                        <% } else { %>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <% claims.forEach(claim => { %>
+                                    <div class="glass-card" style="padding: 1.2rem; border: 1px solid var(--border); background: var(--bg);">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;">
+                                            <strong><%= claim.full_name %> (<%= claim.username %>)</strong>
+                                            <% if (claim.status === 'Pending') { %>
+                                                <span style="color: #ca8a04; font-weight: bold; font-size: 0.85rem;">🟡 Pending Admin Review</span>
+                                            <% } else if (claim.status === 'Approved') { %>
+                                                <span style="color: #16a34a; font-weight: bold; font-size: 0.85rem;">🟢 Approved by Admin</span>
+                                            <% } else if (claim.status === 'Rejected') { %>
+                                                <span style="color: #ef4444; font-weight: bold; font-size: 0.85rem;">🔴 Rejected by Admin</span>
+                                            <% } %>
+                                        </div>
+
+                                        <p style="font-size: 0.9rem; margin-bottom: 0.4rem;"><strong>What Color?</strong> <%= claim.proof_color %></p>
+                                        <p style="font-size: 0.9rem; margin-bottom: 0.4rem;"><strong>Where was it lost/found?</strong> <%= claim.proof_location %></p>
+                                        <p style="font-size: 0.9rem; margin-bottom: 0.8rem;"><strong>Secret Marks Description:</strong> <%= claim.proof_description %></p>
+
+                                        <% if (claim.proof_image_url) { %>
+                                            <div style="margin-bottom: 0.8rem;">
+                                                <strong>Proof Attachment:</strong><br>
+                                                <a href="<%= claim.proof_image_url %>" target="_blank" style="display: inline-block; margin-top: 0.4rem;">
+                                                    <img src="<%= claim.proof_image_url %>" style="max-width: 150px; max-height: 100px; border-radius: 4px; border: 1px solid var(--border);" alt="Claim proof image">
+                                                </a>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <!-- User is NOT the Creator: handles claim submission or claim status display -->
+                    <div style="background: var(--bg); padding: 1.5rem; border-radius: 8px; border: 2px dashed var(--primary); margin-bottom: 1.5rem;">
+                        <% if (myClaim) { %>
+                            <!-- Claim Already Submitted -->
+                            <div style="text-align: center; padding: 1rem;">
+                                <% if (myClaim.status === 'Pending') { %>
+                                    <i class="fa-solid fa-hourglass-half" style="font-size: 3rem; color: #ca8a04; margin-bottom: 1rem;"></i>
+                                    <h3>Claim Request Pending Admin Review</h3>
+                                    <p style="color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">Your proof details have been sent to the Admin. You will receive a notification once the Admin reviews the claim.</p>
+                                <% } else if (myClaim.status === 'Approved') { %>
+                                    <% if (item.status === 'Resolved') { %>
+                                        <i class="fa-solid fa-circle-check" style="font-size: 3rem; color: #16a34a; margin-bottom: 1rem;"></i>
+                                        <h3 style="color: #16a34a;">Handover Verified & Resolved! 🎉</h3>
+                                        <p style="color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">This claim has been verified by the Admin and the item has been handed over.</p>
+                                    <% } else { %>
+                                        <i class="fa-solid fa-circle-check" style="font-size: 3rem; color: #16a34a; margin-bottom: 1rem;"></i>
+                                        <h3 style="color: #16a34a;">Claim Request Approved by Admin! 🎉</h3>
+                                        <p style="color: var(--text); margin-top: 0.5rem; line-height: 1.5; font-weight: 600;">Check your email for the verification OTP.</p>
+                                        
+                                        <div style="background: var(--surface); padding: 1rem; border-radius: 8px; text-align: left; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.5; margin-top: 1rem;">
+                                            <strong>Physical Handover Steps:</strong><br>
+                                            1. Locate the OTP emailed to you by the system.<br>
+                                            2. Physically visit the <strong>Campus Security Desk / Lost & Found Desk</strong>.<br>
+                                            3. Present the OTP to the Admin to verify your claim and collect your item.
+                                        </div>
+                                    <% } %>
+                                <% } else if (myClaim.status === 'Rejected') { %>
+                                    <i class="fa-solid fa-circle-xmark" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                                    <h3 style="color: #ef4444;">Claim Request Rejected</h3>
+                                    <p style="color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">The Admin did not approve your claim proof. If you believe this is a mistake, you can submit a new claim request with better details below.</p>
+                                    <% if (item.status === 'Open') { %>
+                                        <button class="btn btn-outline" onclick="document.getElementById('claim-form-box').style.display='block'; this.style.display='none';" style="margin-top: 1rem;">Submit New Claim Request</button>
+                                    <% } %>
+                                <% } %>
+                            </div>
+                        <% } %>
+
+                        <!-- Form container to submit claim (hidden if claim exists and is not rejected) -->
+                        <% if (item.status === 'Open') { %>
+                            <div id="claim-form-box" style="display: <%= (!myClaim || myClaim.status === 'Rejected') ? 'block' : 'none' %>;">
+                                <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-clipboard-question"></i> Submit Claim Request</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem; line-height: 1.4;">
+                                    To prevent fraud and fake claims, you must provide verification proof. The Admin will review your responses and either approve or reject your claim.
+                                </p>
+                                
+                                <form action="/lost-found/<%= item.id %>/claim-proof" method="POST" enctype="multipart/form-data">
+                                    <div style="margin-bottom: 1rem;">
+                                        <label style="font-size: 0.9rem; font-weight: 600;">What is the exact color of the item?</label>
+                                        <input type="text" name="proof_color" required style="width: 100%; margin-top: 0.3rem;" placeholder="E.g., Matte black, bright red with stickers">
+                                    </div>
+                                    <div style="margin-bottom: 1rem;">
+                                        <label style="font-size: 0.9rem; font-weight: 600;">Where was it lost/found?</label>
+                                        <input type="text" name="proof_location" required style="width: 100%; margin-top: 0.3rem;" placeholder="E.g., Block C 3rd floor lab, near library entrance bench">
+                                    </div>
+                                    <div style="margin-bottom: 1rem;">
+                                        <label style="font-size: 0.9rem; font-weight: 600;">Describe any hidden details / unique markings:</label>
+                                        <textarea name="proof_description" required rows="3" style="width: 100%; margin-top: 0.3rem;" placeholder="Describe scratches, wallpapers, engraved names, model numbers, serial numbers, bill details, etc."></textarea>
+                                    </div>
+                                    <div style="margin-bottom: 1.2rem;">
+                                        <label style="font-size: 0.9rem; font-weight: 600;">Attach Proof File (Optional: original photo, purchase bill, student ID)</label>
+                                        <input type="file" name="proof_image" accept="image/*" style="width: 100%; margin-top: 0.3rem;">
+                                    </div>
+                                    <button type="submit" class="btn" style="width: 100%;">Submit Claim Request</button>
+                                </form>
+                            </div>
+                        <% } else if (item.status === 'Claimed' && (!myClaim || myClaim.status !== 'Approved')) { %>
+                            <div style="text-align: center; padding: 1rem; color: var(--text-muted);">
+                                <i class="fa-solid fa-lock" style="font-size: 2.5rem; margin-bottom: 0.8rem;"></i>
+                                <p>This item is currently undergoing claim verification by the Admin.</p>
+                            </div>
+                        <% } else if (item.status === 'Resolved' && (!myClaim || myClaim.status !== 'Approved')) { %>
+                            <div style="text-align: center; padding: 1rem; color: var(--text-muted);">
+                                <i class="fa-solid fa-circle-check" style="font-size: 2.5rem; color: #16a34a; margin-bottom: 0.8rem;"></i>
+                                <p>This listing has been resolved and closed.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } %>
+            <% } %>
+
+            <!-- Chat Section Added Here -->
+            <% if (user) { %>
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                    <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-comments"></i> Direct Messages</h3>
+                    <div id="chat-box" style="height: 240px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                        <!-- Messages populated via JS -->
+                    </div>
+                    <form id="chat-form" style="display: flex; gap: 1rem; max-width: 100%; margin: 0;">
+                        <input type="text" id="chat-input" placeholder="Type your message..." required style="flex: 1; margin: 0;">
+                        <button type="submit" class="btn" style="white-space: nowrap;"><i class="fa-solid fa-paper-plane"></i> Send</button>
+                    </form>
+                </div>
+                
+                <script>
+                    const chatSocket = io();
+                    const itemId = <%= item.id %>;
+                    const currentUserId = <%= user.id %>;
+                    const currentUsername = `<%= user.username %>`;
+
+                    const chatBox = document.getElementById('chat-box');
+                    const chatForm = document.getElementById('chat-form');
+                    const chatInput = document.getElementById('chat-input');
+
+                    chatSocket.emit('joinItemRoom', itemId);
+
+                    function renderMessage(msg) {
+                        const isMe = msg.sender_id === currentUserId;
+                        const align = isMe ? 'flex-end' : 'flex-start';
+                        const bgClass = isMe ? 'background: var(--primary); color: var(--bg);' : 'background: var(--surface); color: var(--text); border: 1px solid var(--border);';
+                        const author = isMe ? 'You' : msg.username;
+                        const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                        const msgDiv = document.createElement('div');
+                        msgDiv.style = `display: flex; flex-direction: column; align-items: ${align}; max-width: 80%; align-self: ${align};`;
+                        msgDiv.innerHTML = `
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem;">${author} • ${time}</div>
+                            <div style="${bgClass} padding: 0.6rem 1rem; border-radius: 8px; word-break: break-word;">${msg.content}</div>
+                        `;
+                        chatBox.appendChild(msgDiv);
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+
+                    // Fetch history
+                    fetch(`/lost-found/${itemId}/messages`)
+                        .then(res => res.json())
+                        .then(messages => {
+                            if (messages.length === 0) {
+                                chatBox.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: auto; margin-bottom: auto; width: 100%;">No messages yet. Start the conversation!</p>';
+                            } else {
+                                messages.forEach(renderMessage);
+                            }
+                        });
+
+                    // Handle send
+                    chatForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        const content = chatInput.value.trim();
+                        if (content) {
+                            if(chatBox.querySelector('p')) chatBox.innerHTML = ''; // clear empty state
+                            
+                            chatSocket.emit('sendMessage', {
+                                item_id: itemId,
+                                sender_id: currentUserId,
+                                username: currentUsername,
+                                content: content
+                            });
+                            chatInput.value = '';
+                        }
+                    });
+
+                    // Handle receive
+                    chatSocket.on('receiveMessage', (msg) => {
+                        if(chatBox.querySelector('p')) chatBox.innerHTML = '';
+                        renderMessage(msg);
+                    });
+                </script>
+            <% } else { %>
+                <div style="margin-top: 3rem; text-align: center; padding: 2rem; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;">
+                    <h3 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-lock" style="color: var(--text-muted);"></i> Please Login</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1rem;">Log in to contact the reporter via real-time messaging.</p>
+                    <a href="/login" class="btn">Login Now</a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
